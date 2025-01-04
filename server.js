@@ -1,5 +1,6 @@
 const express = require('express');
 const { scrapeFlights } = require('./scraping-final');
+const { scrapeOfertas } = require('./scraping-livelo');
 
 const app = express();
 app.use(express.json());
@@ -34,6 +35,38 @@ app.post('/search-flights', async (req, res) => {
     return res.status(500).json({ error: 'Erro durante o scraping. Tente novamente mais tarde.' });
   }
 });
+
+// Endpoint para buscar passagens
+app.post('/ofertas-livelo', async (req, res) => {
+  const { client, number, textMessage, origin, destination, departureDate } = req.body;
+
+  // Validação básica dos dados recebidos
+  if (!client || !number || !textMessage || !origin || !destination || !departureDate) {
+    return res.status(400).json({
+      error: 'Os campos client, number, textMessage, origin, destination e departureDate são obrigatórios.',
+    });
+  }
+
+  // Converter a data para o formato YYYY-MM-DD
+  const [day, month, year] = departureDate.split('/');
+  const formattedDate = `${year}-${month}-${day}`;
+
+  try {
+    const result = await scrapeOfertas({ origin, destination, departureDate: formattedDate });
+
+    // Retornar o texto diretamente no campo "results"
+    return res.json({
+      client,
+      number,
+      textMessage,
+      results: result.result, // Acessa diretamente o texto do retorno
+    });
+  } catch (error) {
+    console.error('Erro durante a execução do endpoint:', error);
+    return res.status(500).json({ error: 'Erro durante o scraping. Tente novamente mais tarde.' });
+  }
+});
+
 
 // Iniciar o servidor
 const PORT = process.env.PORT || 3000;
