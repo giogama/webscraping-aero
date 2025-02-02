@@ -48,22 +48,48 @@ const scrapeOfertas = async ({ origin, destination, departureDate }) => {
     console.log('Capturando os dots');
     const dotsSelector = `div#owl-dots--default > button[aria-label*="Slide"]`;
     const dots = await page.$$(dotsSelector);
+    let i = 0;
     for (const element of dots) {
       //const text = await page.evaluate((el) => el.innerHTML, element);
       //console.log(text);
+
+      //document.querySelectorAll("div[class*='bannerTitles'] > h2")
+      i++;
+      console.log(`Clicando no dot: ${i}`);
       await element.click();
       await delay(500);
     }
     await delay(2000);
 
+    console.log("Capturando todas as ofertas dos Banners");
+    const ofertas = await page.evaluate(() => {
+      const elements = document.querySelectorAll("div[class*='bannerTitles'] > h2");
+      let result = [];
+
+      if (elements)
+      {
+        let id = 0;
+        elements.forEach(el => {
+          id++;
+          const titulo = el.innerHTML;
+          const item = { id, titulo, subtitulo: ""};
+          result.push(item);
+        });
+      }
+
+      return result; // will return undefined if the element is not found
+    });
+    //console.log(ofertas);
+    
+
     //Mock retorno
-    console.log('Fazendo o Mock do retorno');
-    const messages = ['Extra 5 pontos', 'Amazon 3 pontos', 'Carrefour 10 pontos'];
-    const infos = messages.map((m) => `${m.trim()}`);
+    // console.log('Fazendo o Mock do retorno');
+    // const messages = ['Extra 5 pontos', 'Amazon 3 pontos', 'Carrefour 10 pontos'];
+    // const infos = messages.map((m) => `${m.trim()}`);
 
     delay(20000);
 
-    return { result: infos };
+    return { result: ofertas };
 
   } catch (error) {
     console.error('Erro durante o scraping:', error);
