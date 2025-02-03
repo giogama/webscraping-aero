@@ -62,18 +62,28 @@ const scrapeOfertas = async ({ origin, destination, departureDate }) => {
     await delay(2000);
 
     console.log("Capturando todas as ofertas dos Banners");
+    
     const ofertas = await page.evaluate(() => {
-      const elements = document.querySelectorAll("div[class*='bannerTitles'] > h2");
+      const elTitulos = document.querySelectorAll("div[class*='bannerTitles'] > h2");
+      const elSubtitulos = document.querySelectorAll("div[class='div-banner'] > div[class='div-content'] > span");
       let result = [];
 
-      if (elements)
+      if (elTitulos)
       {
         let id = 0;
-        elements.forEach(el => {
+        let index = 0;
+        elTitulos.forEach(el => {
           id++;
           const titulo = el.innerHTML;
-          const item = { id, titulo, subtitulo: ""};
+          let subtitulo = "";
+          if (elSubtitulos)
+          {
+            subtitulo = elSubtitulos[index].innerHTML;
+          }
+
+          const item = { id, titulo, subtitulo, termino:""};
           result.push(item);
+          index++;
         });
       }
 
@@ -81,6 +91,31 @@ const scrapeOfertas = async ({ origin, destination, departureDate }) => {
     });
     //console.log(ofertas);
     
+    const maisOfertas = await page.evaluate(() => {
+      const pTerminos = document.querySelectorAll("div[class*='card-header card-header--disabled'] > div[class*='cronometer'] > span > div > div > p");
+      const elTitulos = document.querySelectorAll("div[class*='card-content card-content--disabled'] > div[class='card-content__info'] > h3");
+      const elSubtitulos = document.querySelectorAll("div[class*='card-content card-content--disabled'] > div[class='card-content__info'] > p");
+      let result = [];
+
+      if (pTerminos) {
+        let id = 0;
+        let index = 0;
+
+        pTerminos.forEach(el => {
+          id++;
+          const termino = el.innerHTML;
+          const titulo = elTitulos[index].innerHTML;
+          const subtitulo = elSubtitulos[index].innerHTML;
+          const item = { id, titulo, subtitulo, termino};
+          result.push(item);
+          index++;
+        });
+      }
+
+      return result;
+    });
+
+
 
     //Mock retorno
     // console.log('Fazendo o Mock do retorno');
@@ -88,6 +123,8 @@ const scrapeOfertas = async ({ origin, destination, departureDate }) => {
     // const infos = messages.map((m) => `${m.trim()}`);
 
     delay(20000);
+
+    Array.prototype.push.apply(ofertas,maisOfertas); 
 
     return { result: ofertas };
 
