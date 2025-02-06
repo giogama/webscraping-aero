@@ -21,7 +21,7 @@ puppeteer.use(StealthPlugin());
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const scrapeOfertas = async ({ origin, destination, departureDate }) => {
+const scrapeOfertas = async () => {
   const browser = await puppeteer.launch({
     headless: false,
     defaultViewport: null,
@@ -62,7 +62,6 @@ const scrapeOfertas = async ({ origin, destination, departureDate }) => {
     await delay(2000);
 
     console.log("Capturando todas as ofertas dos Banners");
-    
     const ofertas = await page.evaluate(() => {
       const elTitulos = document.querySelectorAll("div[class*='bannerTitles'] > h2");
       const elSubtitulos = document.querySelectorAll("div[class='div-banner'] > div[class='div-content'] > span");
@@ -89,7 +88,6 @@ const scrapeOfertas = async ({ origin, destination, departureDate }) => {
 
       return result; // will return undefined if the element is not found
     });
-    //console.log(ofertas);
     
     const maisOfertas = await page.evaluate(() => {
       const pTerminos = document.querySelectorAll("div[class*='card-header card-header--disabled'] > div[class*='cronometer'] > span > div > div > p");
@@ -115,16 +113,13 @@ const scrapeOfertas = async ({ origin, destination, departureDate }) => {
       return result;
     });
 
-
-
-    //Mock retorno
-    // console.log('Fazendo o Mock do retorno');
-    // const messages = ['Extra 5 pontos', 'Amazon 3 pontos', 'Carrefour 10 pontos'];
-    // const infos = messages.map((m) => `${m.trim()}`);
-
     delay(20000);
-
     Array.prototype.push.apply(ofertas,maisOfertas); 
+    let newid = 0;
+    ofertas.forEach(item => {
+      newid++;
+      item.id = newid;
+    });
 
     return { result: ofertas };
 

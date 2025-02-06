@@ -6,6 +6,20 @@ const app = express();
 app.use(express.json());
 
 // Endpoint para buscar passagens
+function getTimeStamp() {
+  var now = new Date();
+  return ((now.getDate()) + '/' +
+          (now.getMonth() + 1) + '/' +
+           now.getFullYear() + " " +
+           now.getHours() + ':' +
+           ((now.getMinutes() < 10)
+               ? ("0" + now.getMinutes())
+               : (now.getMinutes())) + ':' +
+           ((now.getSeconds() < 10)
+               ? ("0" + now.getSeconds())
+               : (now.getSeconds())));
+}
+
 app.post('/search-flights', async (req, res) => {
   const { client, number, textMessage, origin, destination, departureDate } = req.body;
 
@@ -38,27 +52,17 @@ app.post('/search-flights', async (req, res) => {
 
 // Endpoint para buscar passagens
 app.post('/ofertas-livelo', async (req, res) => {
-  const { client, number, textMessage, origin, destination, departureDate } = req.body;
-
-  // Validação básica dos dados recebidos
-  if (!client || !number || !textMessage || !origin || !destination || !departureDate) {
-    return res.status(400).json({
-      error: 'Os campos client, number, textMessage, origin, destination e departureDate são obrigatórios.',
-    });
-  }
-
-  // Converter a data para o formato YYYY-MM-DD
-  const [day, month, year] = departureDate.split('/');
-  const formattedDate = `${year}-${month}-${day}`;
-
   try {
-    const result = await scrapeOfertas({ origin, destination, departureDate: formattedDate });
+    const result = await scrapeOfertas();
 
     // Retornar o texto diretamente no campo "results"
+    const origin = "Livelo";
+    const timestamp = getTimeStamp();
+    const message = "Promoções encontradas";
     return res.json({
-      client,
-      number,
-      textMessage,
+      origin,
+      message,
+      timestamp,
       results: result.result, // Acessa diretamente o texto do retorno
     });
   } catch (error) {
